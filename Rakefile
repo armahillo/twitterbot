@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'bundler/setup'
+require 'dotenv/tasks'
 
 
 begin

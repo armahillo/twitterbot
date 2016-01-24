@@ -1,8 +1,10 @@
 source "http://rubygems.org"
 ruby '1.9.3'
+gem "rake"
 gem "twitter", ">=3.3"
 gem "json"
 gem "multi_json"
+gem "dotenv"
 gem "rspec"
 gem "vcr"
 # Zlib can give you problems if you don't have the gem installed.
