@@ -72,7 +72,12 @@ class Twitterbot < Twitter::REST::Client
     rescue Exception => e
       @log["gatsd"] << "ERROR: #{e.inspect}"
     ensure
-      puts @log.inspect if @verbose # (4) Print an log report of what happened.
+      if @verbose # (4) Print an log report of what happened.
+        @log.each do |section, messages|
+          puts "[#{section}]:"
+          messages.each { |m| puts "\t - #{m}" }
+        end
+      end
     end
   end
 
