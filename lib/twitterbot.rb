@@ -2,7 +2,7 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'twitter'  # Twitter Gem
-require 'string.rb' # Monkeypatches a truncate method into the String class 
+require './lib/string.rb' # Monkeypatches a truncate method into the String class 
 require 'json' 
 
 ## 
@@ -26,7 +26,7 @@ class Twitterbot < Twitter::REST::Client
   # See method #valid_options above for a list of required keys in the options hash.
   ##
   def initialize(twitter_api_settings = {}, twitterbot_options = {})
-    raise Exception.new("Invalid options: #{twitter_api_settings.inspect}, #{twitterbot_options.inspect}") unless Twitterbot.valid_options?(twitter_api_settings.merge(twitterbot_options))
+    raise Exception.new("Invalid options, did you remember to set up your .env?: #{twitter_api_settings.inspect}, #{twitterbot_options.inspect}") unless Twitterbot.valid_options?(twitter_api_settings.merge(twitterbot_options))
 
     super(twitter_api_settings) # This Hash arg is set in twitterbot_config
 
