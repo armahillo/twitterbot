@@ -15,5 +15,4 @@ gem "vcr"
 # rvm reinstall all --force
 #gem 'zliby'
 gem "webmock"
-gem "factory_girl"
 #gem "system_timer", :require=>false

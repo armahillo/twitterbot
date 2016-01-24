@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'factory_girl'
 require 'stringio'
 require 'multi_json'
 require 'zlib'
@@ -15,7 +14,6 @@ end
 
 APP_ROOT = File.expand_path('../..', __FILE__)
 Dir[File.join(APP_ROOT, 'spec/support/**/*.rb')].each {|f| require f}
-Dir[File.join(APP_ROOT, 'spec/factories/**/*.rb')].each {|f| require f}
 
 serializer = Object.new
 serializer.instance_eval do
@@ -62,11 +60,6 @@ RSpec.configure do |config|
     # unless a formatter has already been configured
     # (e.g. via a command-line flag).
     config.default_formatter = 'doc'
-  end
-
-  config.include FactoryGirl::Syntax::Methods
-  config.before(:suite) do
-    FactoryGirl.lint
   end
 
   # Print the 10 slowest examples and example groups at the
