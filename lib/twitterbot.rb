@@ -74,6 +74,7 @@ class Twitterbot < Twitter::REST::Client
     ensure
       if @verbose # (4) Print an log report of what happened.
         @log.each do |section, messages|
+          next if messages.empty?
           puts "[#{section}]:"
           messages.each { |m| puts "\t - #{m}" }
         end
