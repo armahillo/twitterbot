@@ -3,7 +3,6 @@ require 'bundler/setup'
 require 'dotenv'
 require 'dotenv/tasks'
 require './lib/twitterbot.rb'
-require './config/twitterbot_config.rb'
 
 
 begin
@@ -18,5 +17,6 @@ end
 
 task :run do
   Dotenv.load
+  require './config/twitterbot_config.rb'
   Twitterbot.new(TWITTER_API_SETTINGS, TWITTERBOT_OPTIONS).gatsd
 end
