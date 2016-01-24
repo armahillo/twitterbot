@@ -11,6 +11,6 @@ TWITTER_API_SETTINGS = {
 TWITTERBOT_OPTIONS = {
   :profile_name => ENV["PROFILE_NAME"],
   :search_tag => ENV["SEARCH_TAG"],
-  :block_file => ENV["BLOCK_FILE_PATH"]
+  :block_file => ENV["BLOCK_FILE_PATH"],
   :verbose => ENV["VERBOSE"] || false
 }
