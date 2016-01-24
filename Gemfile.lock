@@ -60,7 +60,7 @@ DEPENDENCIES
   multi_json
   rake
   rspec
-  twitter (>= 3.3)
+  twitter (~> 5.11)
   vcr
   webmock
 

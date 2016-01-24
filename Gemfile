@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 ruby '1.9.3'
 gem "rake"
-gem "twitter", ">=3.3"
+gem "twitter", "~>5.11"
 gem "json"
 gem "multi_json"
 gem "dotenv"
@@ -15,4 +15,3 @@ gem "vcr"
 # rvm reinstall all --force
 #gem 'zliby'
 gem "webmock"
-#gem "system_timer", :require=>false

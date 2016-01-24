@@ -15,6 +15,7 @@ class Twitterbot < Twitter::REST::Client
   attr_reader :tweets
   attr_reader :search_tag
   attr_reader :block_file
+  attr_reader :log
   attr_reader :profile_name
 
   def Twitterbot.valid_options?(options)
@@ -35,9 +36,11 @@ class Twitterbot < Twitter::REST::Client
     @search_tag = twitterbot_options[:search_tag]
     @profile_name = twitterbot_options[:profile_name]
     @block_file = "#{twitterbot_options[:block_file]}" || "config/blocked_userids.json" 
+    @last_log_file = "#{twitterbot_options[:log_file]}" || "config/last_log.txt"
     
     @last_tweet_sent_id = nil 
-    @blocked = File.exists?(@block_file) ? JSON.parse(File.read(@block_file))["blocked"] : []
+    # If the file doesn't exist, don't panic.
+    @blocked = File.exists?(@block_file) ? (JSON.parse(File.read(@block_file))["blocked"] rescue []) : []
     @search_results = []   # raw search results
     @tweets = []           # Collect tweets into here
     @log = {}
@@ -59,10 +62,10 @@ class Twitterbot < Twitter::REST::Client
     @log["gatsd"] = []
     @last_tweet_sent_id = find_where_we_left_off # See method commentary
     begin
-      update_blocked_list                   # (0) Updates the cache of blocked users
-      @search_results = collect_tweets      # (1) Gathers tweets with #searchtag
-      @tweets = process_tweets              # (2) Run through them and check all tweets
-      syndicate                             # (3) Retweet the tweets
+      update_blocked_list                       # (0) Updates the cache of blocked users
+      @search_results = collect_tweets          # (1) Gathers tweets with #searchtag
+      @tweets = process_tweets(@search_results) # (2) Run through them and check all tweets
+      syndicate(@tweets)                        # (3) Retweet the tweets
     rescue Twitter::Error::TooManyRequests => error
       # Twitter's latest API uses pooled requests for ratelimiting. The script
       # should be cron'd to run on intervals, and it's clocked on a rolling basis, so as long 
@@ -70,15 +73,10 @@ class Twitterbot < Twitter::REST::Client
       # SEE: https://dev.twitter.com/rest/public/rate-limiting
       @log["gatsd"] << "Over rate limit, try again in #{error.rate_limit.reset_in/60}m #{error.rate_limit.reset_in%60}s"
     rescue Exception => e
-      @log["gatsd"] << "ERROR: #{e.inspect}"
+      @log["gatsd"] << "ERROR: #{e.inspect}"    # (4) Print an log report of what happened.
     ensure
-      if @verbose # (4) Print an log report of what happened.
-        @log.each do |section, messages|
-          next if messages.empty?
-          puts "[#{section}]:"
-          messages.each { |m| puts "\t - #{m}" }
-        end
-      end
+      activity = log_activity(@log)
+      puts activity if @verbose
     end
   end
 
@@ -105,10 +103,12 @@ public
   #   script runs. Checking blocked_ids does count against rate limiting.
   #   TODO: Add option for interval, in case rate-limiting is an issue. 
   ##
-  def update_blocked_list
-    raise Exception.new("#{@block_file} does not exist.") unless File.exists?(@block_file)
+  def update_blocked_list()
+    # Retrieves the current list of users blocked by the account
     block_list = self.blocked_ids.collect { |id| id.to_s }
+    # manually generate the JSON string to export
     json_string = "{\"blocked\":#{block_list.inspect}}"
+    # truncate the file and then re-dump it for next time.
     File.open(@block_file,'w') { |f| f.write(json_string) }
   end
 
@@ -142,10 +142,10 @@ public
   # process_tweets
   #   Go through all pending tweets and omit the ones that are no good.
   ##
-  def process_tweets
+  def process_tweets(search_results)
     @log["process_tweets"] = []
     tweets = []
-    @search_results.each do |t| 
+    search_results.each do |t| 
       begin
         # Runs against a batch of tests and raises an exception for the first one it violates
         check_tweet(t)
@@ -165,9 +165,9 @@ public
   #   Either do a retweet (nu-style) or build a manual retweet, and gracefully handle the
   #   failure.
   ##
-  def syndicate()
+  def syndicate(tweets)
     @log["syndicate"] = []
-    @tweets.each do |t|
+    tweets.each do |t|
       begin
         retweet(extract_id(t))
         @log["syndicate"] << "Retweeting: (#{t.id}) by #{t.user.screen_name}: #{t.uri}"
@@ -186,6 +186,24 @@ public
         end
       end
     end
+  end
+
+  ##
+  # log_activity
+  #   Process the log and output it if necessary
+  ##
+  def log_activity(log)
+    last_log = File.read(@last_log_file) rescue ""
+    output = ""
+    if last_log != log.inspect  
+      File.open(@last_log_file, 'w') { |f| f.write(log.inspect) }
+      log.each do |section, messages|
+        next if messages.empty?
+        output += "[#{section}]:\n"
+        messages.each { |m| output += "\t - #{m}\n" }
+      end
+    end
+    return output
   end
 
   ## 
