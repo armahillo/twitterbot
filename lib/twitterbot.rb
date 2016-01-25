@@ -81,7 +81,7 @@ class Twitterbot < Twitter::REST::Client
       @log["gatsd"] << "ERROR: #{e.inspect}"    # (4) Print an log report of what happened.
     ensure
       activity = log_activity(@log)
-      puts activity if @verbose
+      puts activity if @verbose && activity != ""
     end
   end
 
