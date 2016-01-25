@@ -1,2 +1,3 @@
 .env
 config/blocked_userids.json
+config/last_log.txt
