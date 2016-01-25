@@ -4,6 +4,7 @@ require 'bundler/setup'
 require 'twitter'  # Twitter Gem
 require './lib/string.rb' # Monkeypatches a truncate method into the String class 
 require 'json' 
+require 'fileutils'
 
 ## 
 # Twitterbot just inherits directly from the Twitter REST Client, and extends
@@ -25,6 +26,7 @@ class Twitterbot < Twitter::REST::Client
   end
   ##
   # See method #valid_options above for a list of required keys in the options hash.
+  # This method should never make API calls, just prepare stuff. All API calls should begin in #gatsd
   ##
   def initialize(twitter_api_settings = {}, twitterbot_options = {})
     raise Exception.new("Invalid options, did you remember to set up your .env?: #{twitter_api_settings.inspect}, #{twitterbot_options.inspect}") unless Twitterbot.valid_options?(twitter_api_settings.merge(twitterbot_options))
@@ -37,6 +39,7 @@ class Twitterbot < Twitter::REST::Client
     @profile_name = twitterbot_options[:profile_name]
     @block_file = twitterbot_options[:block_file] || "config/blocked_userids.json" 
     @last_log_file = twitterbot_options[:log_file] ||  "config/last_log.txt"
+    @rate_limit_file = twitterbot_options[:rate_limit_file] || "config/pause_for_rate_limit"
     @last_tweet_sent_id = nil 
     # If the file doesn't exist, don't panic.
     @blocked = File.exists?(@block_file) ? (JSON.parse(File.read(@block_file))["blocked"] rescue []) : []
@@ -49,6 +52,7 @@ class Twitterbot < Twitter::REST::Client
 
 ###
 # Get All That Shit Done (^TM)
+#-1. Check for rate limiting.
 # 0. Update the blocked users list
 # 1. Search for all tweets
 # 2. Filter out bad tweets
@@ -58,6 +62,7 @@ class Twitterbot < Twitter::REST::Client
 # 4. Print summary if verbose
 ###
   def gatsd
+    return false if rate_limited?
     @log["gatsd"] = []
     @last_tweet_sent_id = find_where_we_left_off # See method commentary
     begin
@@ -70,7 +75,8 @@ class Twitterbot < Twitter::REST::Client
       # should be cron'd to run on intervals, and it's clocked on a rolling basis, so as long 
       # as rate-limited requests are kept to a minimum, we should be good.
       # SEE: https://dev.twitter.com/rest/public/rate-limiting
-      @log["gatsd"] << "Over rate limit, try again in #{error.rate_limit.reset_in/60}m #{error.rate_limit.reset_in%60}s"
+      @log["gatsd"] << "Over rate limit, pausing for 10 mins. (#{error.rate_limit.reset_in/60}m #{error.rate_limit.reset_in%60}s)"
+      FileUtils.touch(@rate_limit_file)
     rescue Exception => e
       @log["gatsd"] << "ERROR: #{e.inspect}"    # (4) Print an log report of what happened.
     ensure
@@ -227,6 +233,23 @@ public
     prefix = "RT #{screen_name} "
     # Strip out the search tag uses the monkeypatched truncate method.
     prefix + full_text.gsub(/\s+#{@search_tag}/,'').truncate(140-prefix.length, separator: ' ')
+  end
+
+  ##
+  # rate_limited?
+  #   if we're rate limited, we'll create a file that delays for 10 mins so we can catch up (return true)
+  #   if 10 mins has elapsed then delete the file and proceed (return false)
+  #   if 10 mins has not yet elapsed return true
+  ##
+  def rate_limited?
+    return false unless File.exists?(@rate_limit_file)
+    created = File.mtime(@rate_limit_file)
+    elapsed_time_in_minutes = (Time.now - created)/60
+    if (elapsed_time_in_minutes >= 10.0)
+      File.unlink(@rate_limit_file)
+      return false
+    end
+    return true
   end
 
 protected

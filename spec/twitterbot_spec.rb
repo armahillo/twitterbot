@@ -114,6 +114,30 @@ RSpec.describe Twitterbot do
     end
   end
 
+  describe "Rate limiting" do
+    it "returns false from gatsd if we're presently rate limited" do
+      stub_rate_limited(true)
+      expect(twitterbot.gatsd).to eq(false)
+    end
+    it "checks a file in config if we're rate limited" do
+      alternate_config = { :profile_name => "foo", :search_tag => "#bar", :rate_limit_file => "spec/support/pause_for_rate_limit" }
+      # We need to use an alternate configuration here, so that we can delete the blockfile
+      alt_twitterbot = Twitterbot.new(twitter_api_config, alternate_config)
+      File.unlink(alternate_config[:rate_limit_file]) if File.exists?(alternate_config[:rate_limit_file])
+      # By default, we shouldn't be rate limited
+      expect(alt_twitterbot).not_to be_rate_limited
+
+      expect {
+        # Create the rate limiting file
+        require 'fileutils'
+        FileUtils.touch(alternate_config[:rate_limit_file])
+        # That should change it
+      }.to change{alt_twitterbot.rate_limited?}.to(true)
+      # Clean up!
+      File.unlink(alternate_config[:rate_limit_file])
+    end
+  end
+
   describe "Logging" do
     it "updates the log file if it's different" do
       # Reset the file so it forces a rewrite

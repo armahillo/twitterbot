@@ -29,3 +29,7 @@ end
 def stub_syndicate(return_val = nil)
 	allow_any_instance_of(Twitterbot).to receive(:syndicate).and_return(return_val)
 end
+
+def stub_rate_limited(return_val)
+    allow_any_instance_of(Twitterbot).to receive(:rate_limited?).and_return(return_val)
+end

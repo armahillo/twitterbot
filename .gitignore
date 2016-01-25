@@ -1,3 +1,4 @@
 .env
 config/blocked_userids.json
 config/last_log.txt
+config/pause_for_rate_limit
