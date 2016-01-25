@@ -12,5 +12,6 @@ TWITTERBOT_OPTIONS = {
   :profile_name => ENV["PROFILE_NAME"],
   :search_tag => ENV["SEARCH_TAG"],
   :block_file => ENV["BLOCK_FILE_PATH"],
-  :verbose => ENV["VERBOSE"] || false
+  :verbose => ENV["VERBOSE"] || false,
+  :log_file => ENV["LOG_FILE"]
 }

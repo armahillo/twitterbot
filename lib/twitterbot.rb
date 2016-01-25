@@ -35,9 +35,8 @@ class Twitterbot < Twitter::REST::Client
     @verbose = twitterbot_options[:verbose] || false
     @search_tag = twitterbot_options[:search_tag]
     @profile_name = twitterbot_options[:profile_name]
-    @block_file = "#{twitterbot_options[:block_file]}" || "config/blocked_userids.json" 
-    @last_log_file = "#{twitterbot_options[:log_file]}" || "config/last_log.txt"
-    
+    @block_file = twitterbot_options[:block_file] || "config/blocked_userids.json" 
+    @last_log_file = twitterbot_options[:log_file] ||  "config/last_log.txt"
     @last_tweet_sent_id = nil 
     # If the file doesn't exist, don't panic.
     @blocked = File.exists?(@block_file) ? (JSON.parse(File.read(@block_file))["blocked"] rescue []) : []
