@@ -157,7 +157,7 @@ public
         # If it passes all tests, queue it up
         tweets << t
       rescue Exception => e
-        @log["process_tweets"] << "Tweet #{t.id} failed because: #{e.inspect}"
+        @log["process_tweets"] << "Tweet #{t.id} failed because: #{e.inspect} - #{t.uri}"
       end
     end
     return tweets
