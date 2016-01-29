@@ -219,7 +219,7 @@ public
   def check_tweet(tweet)
     raise Exception.new("User @#{tweet.user.screen_name} (#{tweet.user.id}) is blocked") if blocking?(tweet.user.id)
     raise Exception.new("Tweet is a retweet already") if (tweet.retweeted?)
- #   raise Exception.new("Tweet contains RT or MT") if oldschool_retweet?(tweet.text)
+    raise Exception.new("Tweet contains RT or MT") if oldschool_retweet?(tweet.text)
     raise Exception.new("It's my own tweet") if by_me?(tweet.user.screen_name)
   end
 
@@ -230,7 +230,7 @@ public
   #   handled somewhat naively.
   ##
   def prep_manual_retweet(screen_name, full_text)
-    prefix = "RT #{screen_name} "
+    prefix = "RT @#{screen_name} "
     # Strip out the search tag uses the monkeypatched truncate method.
     prefix + full_text.gsub(/\s+#{@search_tag}/,'').truncate(140-prefix.length, separator: ' ')
   end
