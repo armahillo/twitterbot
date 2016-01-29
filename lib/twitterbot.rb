@@ -219,7 +219,7 @@ public
   def check_tweet(tweet)
     raise Exception.new("User @#{tweet.user.screen_name} (#{tweet.user.id}) is blocked") if blocking?(tweet.user.id)
     raise Exception.new("Tweet is a retweet already") if (tweet.retweeted?)
-    raise Exception.new("Tweet contains RT or MT") if oldschool_retweet?(tweet.text)
+ #   raise Exception.new("Tweet contains RT or MT") if oldschool_retweet?(tweet.text)
     raise Exception.new("It's my own tweet") if by_me?(tweet.user.screen_name)
   end
 
@@ -266,7 +266,7 @@ protected
   #   is the tweet an old style retweet? We're ignoring those.
   ##
   def oldschool_retweet?(text)
-    (text.include?('RT ')) || (text.include?('MT '))
+    (text[0...2]('RT ')) || (text[0...2]('MT '))
   end
 
   ##
