@@ -266,7 +266,7 @@ protected
   #   is the tweet an old style retweet? We're ignoring those.
   ##
   def oldschool_retweet?(text)
-    (text[0...2]('RT ')) || (text[0...2]('MT '))
+    (text[0...2] == 'RT ') || (text[0...2] == 'MT ')
   end
 
   ##
